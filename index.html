@@ -1,111 +1,147 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>SBU Online Work</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>S-B-U ONLINE WORK</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-body{font-family:Arial;background:#f2f2f2;text-align:center;padding:15px}
-.card{background:#fff;padding:15px;border-radius:12px;max-width:420px;margin:auto}
-input,button{width:100%;padding:12px;margin:6px 0;border-radius:8px;border:1px solid #ccc;box-sizing:border-box}
-button{background:#2563eb;color:#fff;border:none;font-weight:bold}
-.hide{display:none}
-.work{background:#f9f9f9;padding:10px;margin:8px 0;border-radius:8px;text-align:left}
+  *{box-sizing:border-box;font-family:Arial,sans-serif}
+  body{margin:0;background:#0f172a;color:white;display:flex;justify-content:center;min-height:100vh;padding:16px}
+  .box{width:100%;max-width:420px;background:#1e293b;padding:24px;border-radius:16px;margin:auto}
+  h1{text-align:center;font-size:22px;margin:0 0 6px}
+  p.sub{text-align:center;color:#94a3b8;font-size:14px;margin:0 0 20px}
+  .tabs{display:flex;background:#0f172a;padding:4px;border-radius:10px;margin-bottom:20px}
+  .tabs button{flex:1;padding:12px;border:0;border-radius:8px;cursor:pointer;font-weight:bold;background:transparent;color:#94a3b8}
+  .tabs button.active{background:#f59e0b;color:black}
+  label{font-size:13px;color:#cbd5e1}
+  input{width:100%;padding:13px;margin:6px 0 14px;border-radius:10px;border:1px solid #334155;background:#0f172a;color:white;font-size:16px;outline:none}
+  .main-btn{width:100%;padding:14px;border:0;border-radius:10px;background:#f59e0b;color:black;font-weight:bold;font-size:16px;cursor:pointer}
+  .main-btn:disabled{opacity:0.6}
+  #msg{text-align:center;margin-top:14px;font-size:14px;min-height:20px;color:#fbbf24}
+  #dashboard{display:none}
+  .card{background:#0f172a;padding:16px;border-radius:12px;margin-top:14px}
+  .logout{width:100%;padding:12px;margin-top:14px;border:0;border-radius:10px;background:#ef4444;color:white;font-weight:bold;cursor:pointer}
 </style>
 </head>
 <body>
-<div class="card">
-<h2>SBU Online Work</h2>
-<div id="auth">
-<input id="phone" placeholder="Phone e.g 0771234567" type="tel">
-<input id="pass" placeholder="Password (6+ chars)" type="password">
-<input id="name" placeholder="Full Name">
-<button onclick="register()">REGISTER</button>
-<button onclick="login()" style="background:#16a34a">LOGIN</button>
-<p id="msg" style="color:red"></p>
-</div>
-<div id="pay" class="hide">
-<h3>Pay 12,000 to Activate</h3>
-<p>Send 12,000 to <b>0758502917</b> via Airtel / MTN</p>
-<input id="txid" placeholder="Enter Transaction ID">
-<button onclick="submitPay()">I HAVE PAID</button>
-</div>
-<div id="app" class="hide">
-<h3>Welcome <span id="uname"></span></h3>
-<p>Balance: <b><span id="bal">0</span> UGX</b></p>
-<div id="works"></div>
-<button onclick="logout()" style="background:#666">LOGOUT</button>
-</div>
-</div>
-<script>
-const SUPABASE_URL = "https://dhaqrimlmxgzyqhzggjn.supabase.co";
-const SUPABASE_KEY = "sb_publishable_p-43bJm9VjiMm1QWcDuVsA_8ubbO_Fb";
-const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-async function register(){
-  let phone=document.getElementById('phone').value.trim();
-  let pass=document.getElementById('pass').value;
-  let name=document.getElementById('name').value.trim();
-  let msg=document.getElementById('msg');
-  if(phone.length<10||pass.length<6||!name){msg.innerText='Enter valid phone, password 6+, and name';return}
-  msg.innerText='Registering...';
-  let email=phone+"@sbu.com";
-  let {data,error}=await supabaseClient.auth.signUp({email:email,password:pass});
-  if(error){msg.innerText=error.message;return}
-  let user=data.user;
-  if(user){
-    await supabaseClient.from('profiles').insert([{id:user.id,phone:phone,full_name:name}]);
+<!-- LOGIN / REGISTER SCREEN -->
+<div class="box" id="authBox">
+  <h1>S-B-U ONLINE WORK</h1>
+  <p class="sub">Enter your MTN or Airtel number</p>
+
+  <div class="tabs">
+    <button id="tabLogin" class="active" onclick="showTab('login')">LOGIN</button>
+    <button id="tabRegister" onclick="showTab('register')">REGISTER</button>
+  </div>
+
+  <!-- LOGIN FORM -->
+  <div id="loginForm">
+    <label>Phone Number</label>
+    <input id="loginPhone" type="tel" placeholder="e.g. 0770492890" maxlength="10">
+    <button class="main-btn" id="loginBtn" onclick="doLogin()">Login</button>
+  </div>
+
+  <!-- REGISTER FORM -->
+  <div id="registerForm" style="display:none">
+    <label>Full Name</label>
+    <input id="regName" type="text" placeholder="e.g. John Doe">
+    <label>Phone Number</label>
+    <input id="regPhone" type="tel" placeholder="e.g. 0770492890" maxlength="10">
+    <button class="main-btn" id="regBtn" onclick="doRegister()">Create Account</button>
+  </div>
+
+  <div id="msg"></div>
+</div>
+
+<!-- DASHBOARD SCREEN -->
+<div class="box" id="dashboard">
+  <h1>Welcome 👋</h1>
+  <p class="sub" id="welcomeText"></p>
+  <div class="card">
+    <b>Your Phone:</b> <span id="dashPhone"></span><br><br>
+    <b>Your Name:</b> <span id="dashName"></span><br><br>
+    <b>Balance:</b> UGX 0
+  </div>
+  <button class="logout" onclick="doLogout()">Logout</button>
+</div>
+
+<script>
+  // === PASTE YOUR REAL KEYS HERE FROM SUPABASE > SETTINGS > API ===
+  const SUPABASE_URL = "PASTE_YOUR_SUPABASE_URL_HERE";
+  const SUPABASE_ANON_KEY = "PASTE_YOUR_SUPABASE_ANON_KEY_HERE";
+
+  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  function showTab(tab){
+    document.getElementById('tabLogin').classList.toggle('active', tab==='login');
+    document.getElementById('tabRegister').classList.toggle('active', tab==='register');
+    document.getElementById('loginForm').style.display = tab==='login' ? 'block' : 'none';
+    document.getElementById('registerForm').style.display = tab==='register' ? 'block' : 'none';
+    document.getElementById('msg').innerText = '';
   }
-  msg.innerText='Registered! Now pay 12,000 to 0758502917';
-  checkUser();
-}
-async function login(){
-  let phone=document.getElementById('phone').value.trim();
-  let pass=document.getElementById('pass').value;
-  let msg=document.getElementById('msg');
-  let email=phone+"@sbu.com";
-  let {data,error}=await supabaseClient.auth.signInWithPassword({email:email,password:pass});
-  if(error){msg.innerText=error.message;return}
-  msg.innerText='';checkUser();
-}
-async function checkUser(){
-  let {data:{user}}=await supabaseClient.auth.getUser();
-  if(!user) return;
-  document.getElementById('auth').classList.add('hide');
-  let {data:profile}=await supabaseClient.from('profiles').select('*').eq('id',user.id).single();
-  if(!profile || !profile.is_paid){
-    document.getElementById('pay').classList.remove('hide');
-  } else {
-    document.getElementById('app').classList.remove('hide');
-    document.getElementById('uname').innerText=profile.full_name||'User';
-    document.getElementById('bal').innerText=profile.balance||0;
-    loadWorks(profile);
+
+  function cleanPhone(p){ return p.replace(/\D/g,'').trim(); }
+
+  async function doLogin(){
+    const phone = cleanPhone(document.getElementById('loginPhone').value);
+    const btn = document.getElementById('loginBtn');
+    const msg = document.getElementById('msg');
+    if(phone.length !== 10){ msg.innerText = "Enter 10 digits e.g. 0770492890"; return; }
+    btn.disabled = true; btn.innerText = "Checking..."; msg.innerText = "";
+
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('phone', phone)
+      .maybeSingle();
+
+    btn.disabled = false; btn.innerText = "Login";
+
+    if(error){ msg.innerText = "Error: " + error.message; return; }
+    if(!data){ msg.innerText = "No account found. Please tap REGISTER."; return; }
+
+    showDashboard(data);
   }
-}
-async function submitPay(){
-  let tx=document.getElementById('txid').value.trim();
-  if(tx.length<5){alert('Enter real Transaction ID');return}
-  let {data:{user}}=await supabaseClient.auth.getUser();
-  // For now mark as paid directly. You will verify TXID manually in Supabase.
-  await supabaseClient.from('profiles').update({is_paid:true,txid:tx}).eq('id',user.id);
-  alert('Payment submitted! TXID saved. You can now work.');
-  location.reload();
-}
-function loadWorks(profile){
-  let works=[{title:'Watch Video - Like & Comment',reward:500},{title:'Follow TikTok Page',reward:800},{title:'Share WhatsApp Status',reward:1000},{title:'Write Short Review',reward:1500}];
-  document.getElementById('works').innerHTML=works.map(w=>'<div class="work"><b>'+w.title+'</b><br>'+w.reward+' UGX <button onclick="doWork('+w.reward+',\''+w.title+'\')">DO WORK</button></div>').join('');
-  window.currentProfile=profile;
-}
-async function doWork(reward,title){
-  let {data:{user}}=await supabaseClient.auth.getUser();
-  let {data:profile}=await supabaseClient.from('profiles').select('*').eq('id',user.id).single();
-  let newBal=(profile.balance||0)+reward;
-  await supabaseClient.from('profiles').update({balance:newBal}).eq('id',user.id);
-  document.getElementById('bal').innerText=newBal;
-  alert('Done: '+title+' +'+reward+' UGX');
-}
-async function logout(){await supabaseClient.auth.signOut();location.reload()}
-checkUser();
+
+  async function doRegister(){
+    const name = document.getElementById('regName').value.trim();
+    const phone = cleanPhone(document.getElementById('regPhone').value);
+    const btn = document.getElementById('regBtn');
+    const msg = document.getElementById('msg');
+    if(!name){ msg.innerText = "Enter your name"; return; }
+    if(phone.length !== 10){ msg.innerText = "Enter 10 digits e.g. 0770492890"; return; }
+    btn.disabled = true; btn.innerText = "Creating..."; msg.innerText = "";
+
+    const { data: existing } = await supabase.from('profiles').select('*').eq('phone', phone).maybeSingle();
+    if(existing){ btn.disabled=false; btn.innerText="Create Account"; msg.innerText="This number already exists. Please tap LOGIN."; return; }
+
+    const { data, error } = await supabase
+      .from('profiles')
+      .insert([{ phone: phone, full_name: name }])
+      .select()
+      .single();
+
+    btn.disabled = false; btn.innerText = "Create Account";
+    if(error){ msg.innerText = "Error: " + error.message; return; }
+    showDashboard(data);
+  }
+
+  function showDashboard(user){
+    document.getElementById('authBox').style.display = 'none';
+    document.getElementById('dashboard').style.display = 'block';
+    document.getElementById('dashPhone').innerText = user.phone || '';
+    document.getElementById('dashName').innerText = user.full_name || user.name || 'User';
+    document.getElementById('welcomeText').innerText = "Logged in as " + (user.full_name || user.phone);
+    localStorage.setItem('sbu_phone', user.phone);
+  }
+
+  function doLogout(){
+    localStorage.removeItem('sbu_phone');
+    document.getElementById('dashboard').style.display = 'none';
+    document.getElementById('authBox').style.display = 'block';
+  }
 </script>
 </body>
 </html>
