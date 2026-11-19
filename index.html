@@ -3,144 +3,122 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>S-B-U ONLINE WORK</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<title>Login / Register</title>
 <style>
   *{box-sizing:border-box;font-family:Arial,sans-serif}
-  body{margin:0;background:#0f172a;color:white;display:flex;justify-content:center;min-height:100vh;padding:16px}
-  .box{width:100%;max-width:420px;background:#1e293b;padding:24px;border-radius:16px;margin:auto}
-  h1{text-align:center;font-size:22px;margin:0 0 6px}
-  p.sub{text-align:center;color:#94a3b8;font-size:14px;margin:0 0 20px}
-  .tabs{display:flex;background:#0f172a;padding:4px;border-radius:10px;margin-bottom:20px}
-  .tabs button{flex:1;padding:12px;border:0;border-radius:8px;cursor:pointer;font-weight:bold;background:transparent;color:#94a3b8}
-  .tabs button.active{background:#f59e0b;color:black}
-  label{font-size:13px;color:#cbd5e1}
-  input{width:100%;padding:13px;margin:6px 0 14px;border-radius:10px;border:1px solid #334155;background:#0f172a;color:white;font-size:16px;outline:none}
-  .main-btn{width:100%;padding:14px;border:0;border-radius:10px;background:#f59e0b;color:black;font-weight:bold;font-size:16px;cursor:pointer}
-  .main-btn:disabled{opacity:0.6}
-  #msg{text-align:center;margin-top:14px;font-size:14px;min-height:20px;color:#fbbf24}
-  #dashboard{display:none}
-  .card{background:#0f172a;padding:16px;border-radius:12px;margin-top:14px}
-  .logout{width:100%;padding:12px;margin-top:14px;border:0;border-radius:10px;background:#ef4444;color:white;font-weight:bold;cursor:pointer}
+  body{margin:0;background:#f2f2f2;display:flex;justify-content:center;align-items:center;min-height:100vh;padding:16px}
+  .card{background:#fff;width:100%;max-width:380px;padding:24px;border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,.1)}
+  h2{text-align:center;margin:0 0 6px}
+  p.sub{text-align:center;color:#666;font-size:14px;margin:0 0 18px}
+  label{font-size:13px;font-weight:bold;display:block;margin:12px 0 6px}
+  input{width:100%;padding:13px;border:1px solid #ddd;border-radius:10px;font-size:16px;outline:none}
+  input:focus{border-color:#25D366}
+  .tabs{display:flex;background:#eee;border-radius:10px;padding:4px;margin-bottom:10px}
+  .tabs button{flex:1;padding:11px;border:0;border-radius:8px;font-weight:bold;cursor:pointer;background:transparent}
+  .tabs button.active{background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.1)}
+  .btn{width:100%;padding:14px;border:0;border-radius:10px;font-size:16px;font-weight:bold;cursor:pointer;margin-top:16px;color:#fff;background:#25D366}
+  .btn:disabled{opacity:.6}
+  #msg{text-align:center;font-size:14px;margin-top:12px;min-height:20px;color:#d00}
+  #msg.ok{color:green}
+  .hidden{display:none}
 </style>
 </head>
 <body>
-
-<!-- LOGIN / REGISTER SCREEN -->
-<div class="box" id="authBox">
-  <h1>S-B-U ONLINE WORK</h1>
-  <p class="sub">Enter your MTN or Airtel number</p>
+<div class="card">
+  <h2>Welcome</h2>
+  <p class="sub">Login or create account with phone</p>
 
   <div class="tabs">
-    <button id="tabLogin" class="active" onclick="showTab('login')">LOGIN</button>
-    <button id="tabRegister" onclick="showTab('register')">REGISTER</button>
+    <button id="tabLogin" class="active" onclick="switchTab('login')">LOGIN</button>
+    <button id="tabRegister" onclick="switchTab('register')">REGISTER</button>
   </div>
 
-  <!-- LOGIN FORM -->
-  <div id="loginForm">
-    <label>Phone Number</label>
-    <input id="loginPhone" type="tel" placeholder="e.g. 0770492890" maxlength="10">
-    <button class="main-btn" id="loginBtn" onclick="doLogin()">Login</button>
-  </div>
-
-  <!-- REGISTER FORM -->
-  <div id="registerForm" style="display:none">
+  <div id="registerFields" class="hidden">
     <label>Full Name</label>
-    <input id="regName" type="text" placeholder="e.g. John Doe">
-    <label>Phone Number</label>
-    <input id="regPhone" type="tel" placeholder="e.g. 0770492890" maxlength="10">
-    <button class="main-btn" id="regBtn" onclick="doRegister()">Create Account</button>
+    <input id="name" placeholder="e.g. John Doe">
   </div>
 
+  <label>Phone Number</label>
+  <input id="phone" placeholder="0770492890" inputmode="tel">
+
+  <button id="mainBtn" class="btn" onclick="handleAuth()">LOGIN</button>
   <div id="msg"></div>
 </div>
 
-<!-- DASHBOARD SCREEN -->
-<div class="box" id="dashboard">
-  <h1>Welcome 👋</h1>
-  <p class="sub" id="welcomeText"></p>
-  <div class="card">
-    <b>Your Phone:</b> <span id="dashPhone"></span><br><br>
-    <b>Your Name:</b> <span id="dashName"></span><br><br>
-    <b>Balance:</b> UGX 0
-  </div>
-  <button class="logout" onclick="doLogout()">Logout</button>
-</div>
-
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-  // === PASTE YOUR REAL KEYS HERE FROM SUPABASE > SETTINGS > API ===
-  const SUPABASE_URL = "PASTE_YOUR_SUPABASE_URL_HERE";
-  const SUPABASE_ANON_KEY = "PASTE_YOUR_SUPABASE_ANON_KEY_HERE";
-
+  const SUPABASE_URL = "https://dhaqrimlmxgzyqhzggjn.supabase.co";
+  const SUPABASE_ANON_KEY = "PASTE_YOUR_ANON_KEY_HERE";
   const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-  function showTab(tab){
-    document.getElementById('tabLogin').classList.toggle('active', tab==='login');
-    document.getElementById('tabRegister').classList.toggle('active', tab==='register');
-    document.getElementById('loginForm').style.display = tab==='login' ? 'block' : 'none';
-    document.getElementById('registerForm').style.display = tab==='register' ? 'block' : 'none';
+  let mode = 'login';
+
+  function switchTab(m){
+    mode = m;
+    document.getElementById('tabLogin').classList.toggle('active', m==='login');
+    document.getElementById('tabRegister').classList.toggle('active', m==='register');
+    document.getElementById('registerFields').classList.toggle('hidden', m!=='register');
+    document.getElementById('mainBtn').innerText = m==='login' ? 'LOGIN' : 'REGISTER';
     document.getElementById('msg').innerText = '';
   }
 
-  function cleanPhone(p){ return p.replace(/\D/g,'').trim(); }
+  function cleanPhone(p){
+    p = p.trim().replace(/\s+/g,'');
+    if(p.startsWith('+256')) return p;
+    if(p.startsWith('256')) return '+' + p;
+    if(p.startsWith('0')) return '+256' + p.slice(1);
+    return p;
+  }
 
-  async function doLogin(){
-    const phone = cleanPhone(document.getElementById('loginPhone').value);
-    const btn = document.getElementById('loginBtn');
+  async function handleAuth(){
     const msg = document.getElementById('msg');
-    if(phone.length !== 10){ msg.innerText = "Enter 10 digits e.g. 0770492890"; return; }
-    btn.disabled = true; btn.innerText = "Checking..."; msg.innerText = "";
+    const btn = document.getElementById('mainBtn');
+    const phoneRaw = document.getElementById('phone').value;
+    const name = document.getElementById('name').value.trim();
+    const phone = cleanPhone(phoneRaw);
 
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('phone', phone)
-      .maybeSingle();
+    if(!phoneRaw){ msg.innerText='Enter phone number'; return; }
+    if(mode==='register' && !name){ msg.innerText='Enter your name'; return; }
 
-    btn.disabled = false; btn.innerText = "Login";
+    btn.disabled = true;
+    btn.innerText = 'Checking...';
+    msg.innerText = '';
+    msg.classList.remove('ok');
 
-    if(error){ msg.innerText = "Error: " + error.message; return; }
-    if(!data){ msg.innerText = "No account found. Please tap REGISTER."; return; }
+    try{
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('phone', phone)
+        .maybeSingle();
 
-    showDashboard(data);
-  }
+      if(error) throw error;
 
-  async function doRegister(){
-    const name = document.getElementById('regName').value.trim();
-    const phone = cleanPhone(document.getElementById('regPhone').value);
-    const btn = document.getElementById('regBtn');
-    const msg = document.getElementById('msg');
-    if(!name){ msg.innerText = "Enter your name"; return; }
-    if(phone.length !== 10){ msg.innerText = "Enter 10 digits e.g. 0770492890"; return; }
-    btn.disabled = true; btn.innerText = "Creating..."; msg.innerText = "";
-
-    const { data: existing } = await supabase.from('profiles').select('*').eq('phone', phone).maybeSingle();
-    if(existing){ btn.disabled=false; btn.innerText="Create Account"; msg.innerText="This number already exists. Please tap LOGIN."; return; }
-
-    const { data, error } = await supabase
-      .from('profiles')
-      .insert([{ phone: phone, full_name: name }])
-      .select()
-      .single();
-
-    btn.disabled = false; btn.innerText = "Create Account";
-    if(error){ msg.innerText = "Error: " + error.message; return; }
-    showDashboard(data);
-  }
-
-  function showDashboard(user){
-    document.getElementById('authBox').style.display = 'none';
-    document.getElementById('dashboard').style.display = 'block';
-    document.getElementById('dashPhone').innerText = user.phone || '';
-    document.getElementById('dashName').innerText = user.full_name || user.name || 'User';
-    document.getElementById('welcomeText').innerText = "Logged in as " + (user.full_name || user.phone);
-    localStorage.setItem('sbu_phone', user.phone);
-  }
-
-  function doLogout(){
-    localStorage.removeItem('sbu_phone');
-    document.getElementById('dashboard').style.display = 'none';
-    document.getElementById('authBox').style.display = 'block';
+      if(mode==='login'){
+        if(!data){
+          msg.innerText = 'No account found. Please REGISTER first.';
+        } else {
+          msg.innerText = 'Welcome back, ' + (data.name || '') + ' ✅ Login successful!';
+          msg.classList.add('ok');
+        }
+      } else {
+        if(data){
+          msg.innerText = 'Account already exists. Please LOGIN.';
+        } else {
+          const { error: insertError } = await supabase
+            .from('profiles')
+            .insert([{ phone: phone, name: name }]);
+          if(insertError) throw insertError;
+          msg.innerText = 'Account created ✅ Now tap LOGIN';
+          msg.classList.add('ok');
+          switchTab('login');
+        }
+      }
+    } catch(e){
+      msg.innerText = 'Error: ' + e.message;
+    }
+    btn.disabled = false;
+    btn.innerText = mode==='login' ? 'LOGIN' : 'REGISTER';
   }
 </script>
 </body>
