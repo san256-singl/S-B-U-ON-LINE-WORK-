@@ -1,69 +1,111 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>S-B-U ONLINE WORK - Real Earn</title>
+<html>
+<head>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SBU Online Work</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<style>body{font-family:Arial;background:#0f172a;color:white;margin:0;padding:16px} .card{background:#1e293b;padding:16px;border-radius:14px;margin:12px 0} input,button{width:100%;padding:12px;margin:6px 0;border-radius:10px;border:none} button{background:#22c55e;font-weight:bold} .work{background:#334155;padding:12px;border-radius:12px;margin:8px 0} .hide{display:none} .paybox{background:#ef4444;padding:12px;border-radius:12px;text-align:center}</style></head>
+<style>
+body{font-family:Arial;background:#f2f2f2;text-align:center;padding:15px}
+.card{background:#fff;padding:15px;border-radius:12px;max-width:420px;margin:auto}
+input,button{width:100%;padding:12px;margin:6px 0;border-radius:8px;border:1px solid #ccc;box-sizing:border-box}
+button{background:#2563eb;color:#fff;border:none;font-weight:bold}
+.hide{display:none}
+.work{background:#f9f9f9;padding:10px;margin:8px 0;border-radius:8px;text-align:left}
+</style>
+</head>
 <body>
-<h1>💰 S-B-U ONLINE WORK</h1><p>Real Work • Real Money • Uganda</p>
-<div id="auth" class="card">
-<h3>Register / Login with MTN/Airtel</h3>
-<input id="phone" placeholder="Phone e.g 0758502917 or 0771234567">
-<input id="pass" type="password" placeholder="Password (6+ chars)">
+<div class="card">
+<h2>SBU Online Work</h2>
+<div id="auth">
+<input id="phone" placeholder="Phone e.g 0771234567" type="tel">
+<input id="pass" placeholder="Password (6+ chars)" type="password">
 <input id="name" placeholder="Full Name">
-<button onclick="register()">REGISTER - Pay 12,000 UGX Fee</button>
-<button onclick="login()" style="background:#3b82f6">LOGIN</button>
-<p id="msg"></p>
+<button onclick="register()">REGISTER</button>
+<button onclick="login()" style="background:#16a34a">LOGIN</button>
+<p id="msg" style="color:red"></p>
 </div>
-<div id="pay" class="card hide">
-<h3>🔒 Pay Registration Fee To Activate</h3>
-<p>Send <b>12,000 UGX</b> via Airtel Money / MTN MoMo to:</p>
-<div class="paybox"><h2 style="margin:0">0758502917</h2><p style="margin:4px">+256758502917 - SBU ADMIN - Airtel</p></div>
-<p style="margin-top:10px">Steps: Dial *185# (Airtel) or *165# (MTN) > Send Money > Enter 0758502917 > Amount 12000 > Enter PIN</p>
-<input id="txid" placeholder="Enter Airtel/MoMo Transaction ID e.g QW123...">
-<button onclick="submitPay()">I HAVE PAID 12,000 - ACTIVATE ME</button>
-<p>Admin will check your Transaction ID on Airtel. Your account is PENDING until approved.</p>
+<div id="pay" class="hide">
+<h3>Pay 12,000 to Activate</h3>
+<p>Send 12,000 to <b>0758502917</b> via Airtel / MTN</p>
+<input id="txid" placeholder="Enter Transaction ID">
+<button onclick="submitPay()">I HAVE PAID</button>
 </div>
 <div id="app" class="hide">
-<div class="card"><h3>Welcome <span id="uname"></span></h3><p>Balance: <b><span id="bal">0</span> UGX</b></p><p>Status: <span id="status">ACTIVE - Fee Paid</span></p><button onclick="logout()" style="background:#ef4444">Logout</button></div>
-<div class="card"><h3>Available Works - Real From Database</h3><div id="works">Loading...</div></div>
-<div class="card"><h3>Withdraw</h3><p>When balance reaches 20,000 UGX, WhatsApp Admin on 0758502917 with your number to get paid via Airtel Money.</p></div>
+<h3>Welcome <span id="uname"></span></h3>
+<p>Balance: <b><span id="bal">0</span> UGX</b></p>
+<div id="works"></div>
+<button onclick="logout()" style="background:#666">LOGOUT</button>
+</div>
 </div>
 <script>
-const supabaseClient = supabase.createClient("https://dhaqrimlmxgzyqhzggjn.supabase.co","sb_publishable_p-43bJm9VjiMm1QWcDuVsA_8ubbO_Fb");
-function phoneToEmail(p){let n=p.trim().replace(/\s/g,''); if(n.startsWith('0')) n='256'+n.slice(1); if(n.startsWith('+')) n=n.slice(1); return n+'@sbu.ug';}
+const SUPABASE_URL = "https://dhaqrimlmxgzyqhzggjn.supabase.co";
+const SUPABASE_KEY = "sb_publishable_p-43bJm9VjiMm1QWcDuVsA_8ubbO_Fb";
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
 async function register(){
-  let phone=document.getElementById('phone').value, pass=document.getElementById('pass').value, name=document.getElementById('name').value;
-  if(phone.length<10||pass.length<6) return document.getElementById('msg').innerText='Enter valid phone (10 digits) + password 6+ chars';
-  const {data,error}=await supabaseClient.auth.signUp({email:phoneToEmail(phone),password:pass,options:{data:{full_name:name,[STRIPPED]
-  if(error) return document.getElementById('msg').innerText=error.message;
-  document.getElementById('msg').innerText='Registered! Now pay 12,000 to 0758502917';
-  document.getElementById('auth').classList.add('hide'); document.getElementById('pay').classList.remove('hide');
-}
-async function login(){
-  let phone=document.getElementById('phone').value, pass=document.getElementById('pass').value;
-  const {data,error}=await supabaseClient.auth.signInWithPassword({email:phoneToEmail(phone),password:pass});
-  if(error) return document.getElementById('msg').innerText=error.message;
+  let phone=document.getElementById('phone').value.trim();
+  let pass=document.getElementById('pass').value;
+  let name=document.getElementById('name').value.trim();
+  let msg=document.getElementById('msg');
+  if(phone.length<10||pass.length<6||!name){msg.innerText='Enter valid phone, password 6+, and name';return}
+  msg.innerText='Registering...';
+  let email=phone+"@sbu.com";
+  let {data,error}=await supabaseClient.auth.signUp({email:email,password:pass});
+  if(error){msg.innerText=error.message;return}
+  let user=data.user;
+  if(user){
+    await supabaseClient.from('profiles').insert([{id:user.id,phone:phone,full_name:name}]);
+  }
+  msg.innerText='Registered! Now pay 12,000 to 0758502917';
   checkUser();
 }
+async function login(){
+  let phone=document.getElementById('phone').value.trim();
+  let pass=document.getElementById('pass').value;
+  let msg=document.getElementById('msg');
+  let email=phone+"@sbu.com";
+  let {data,error}=await supabaseClient.auth.signInWithPassword({email:email,password:pass});
+  if(error){msg.innerText=error.message;return}
+  msg.innerText='';checkUser();
+}
 async function checkUser(){
-  const {data:{user}}=await supabaseClient.auth.getUser(); if(!user) return;
+  let {data:{user}}=await supabaseClient.auth.getUser();
+  if(!user) return;
   document.getElementById('auth').classList.add('hide');
-  if(!localStorage.getItem('sbu_paid_'+user.id)){ document.getElementById('pay').classList.remove('hide'); }
-  else { document.getElementById('app').classList.remove('hide'); document.getElementById('uname').innerText=user.user_metadata.full_name||user.user_metadata.phone; document.getElementById('bal').innerText=localStorage.getItem('sbu_bal')||'0'; loadWorks(); }
+  let {data:profile}=await supabaseClient.from('profiles').select('*').eq('id',user.id).single();
+  if(!profile || !profile.is_paid){
+    document.getElementById('pay').classList.remove('hide');
+  } else {
+    document.getElementById('app').classList.remove('hide');
+    document.getElementById('uname').innerText=profile.full_name||'User';
+    document.getElementById('bal').innerText=profile.balance||0;
+    loadWorks(profile);
+  }
 }
-function submitPay(){
-  let tx=document.getElementById('txid').value; if(tx.length<5) return alert('Enter real Airtel Transaction ID');
-  supabaseClient.auth.getUser().then(({data:{user}})=>{ localStorage.setItem('sbu_paid_'+user.id,tx); alert('Payment submitted! TxID: '+tx+' Admin will check Airtel 0758502917 and activate you.'); document.getElementById('pay').classList.add('hide'); document.getElementById('app').classList.remove('hide'); loadWorks(); });
+async function submitPay(){
+  let tx=document.getElementById('txid').value.trim();
+  if(tx.length<5){alert('Enter real Transaction ID');return}
+  let {data:{user}}=await supabaseClient.auth.getUser();
+  // For now mark as paid directly. You will verify TXID manually in Supabase.
+  await supabaseClient.from('profiles').update({is_paid:true,txid:tx}).eq('id',user.id);
+  alert('Payment submitted! TXID saved. You can now work.');
+  location.reload();
 }
-async function loadWorks(){
-  const {data,error}=await supabaseClient.from('works').select('*').eq('is_active',true);
-  if(error) document.getElementById('works').innerHTML=error.message;
-  else document.getElementById('works').innerHTML=data.map(w=>`<div class="work"><b>${w.title}</b><p>${w.description}</p><b>${w.reward} UGX</b><button onclick="doWork(${w.id},${w.reward},'${w.title}')">Do This Work</button></div>`).join('');
+function loadWorks(profile){
+  let works=[{title:'Watch Video - Like & Comment',reward:500},{title:'Follow TikTok Page',reward:800},{title:'Share WhatsApp Status',reward:1000},{title:'Write Short Review',reward:1500}];
+  document.getElementById('works').innerHTML=works.map(w=>'<div class="work"><b>'+w.title+'</b><br>'+w.reward+' UGX <button onclick="doWork('+w.reward+',\''+w.title+'\')">DO WORK</button></div>').join('');
+  window.currentProfile=profile;
 }
-function doWork(id,reward,title){
-  let bal=parseInt(localStorage.getItem('sbu_bal')||'0'); bal+=reward; localStorage.setItem('sbu_bal',bal);
-  document.getElementById('bal').innerText=bal; alert('Work submitted: '+title+' +'+reward+' UGX added. Admin will approve.');
+async function doWork(reward,title){
+  let {data:{user}}=await supabaseClient.auth.getUser();
+  let {data:profile}=await supabaseClient.from('profiles').select('*').eq('id',user.id).single();
+  let newBal=(profile.balance||0)+reward;
+  await supabaseClient.from('profiles').update({balance:newBal}).eq('id',user.id);
+  document.getElementById('bal').innerText=newBal;
+  alert('Done: '+title+' +'+reward+' UGX');
 }
-async function logout(){ await supabaseClient.auth.signOut(); location.reload(); }
-supabaseClient.auth.getUser().then(({data:{user}})=>{ if(user) checkUser(); });
-</script></body></html>
+async function logout(){await supabaseClient.auth.signOut();location.reload()}
+checkUser();
+</script>
+</body>
+</html>
